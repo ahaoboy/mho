@@ -23,6 +23,14 @@ pub struct Cli {
 
     #[arg(long, default_value_t = false)]
     pub schedule: bool,
+
+    /// Always open a new console window (Windows)
+    #[arg(long, global = true, default_value_t = false)]
+    pub show: bool,
+
+    /// Detach the console and suppress all output (Windows)
+    #[arg(long, global = true, default_value_t = false)]
+    pub hide: bool,
 }
 
 #[derive(
@@ -108,6 +116,12 @@ pub enum ConfigCommands {
         /// Maximum runtime in hours (0 to disable), omit to show current value
         value: Option<u64>,
     },
+    /// Download and apply the configuration from the configured URL
+    Update {
+        /// Force update even if file exists
+        #[arg(short, long, default_value_t = false)]
+        force: bool,
+    },
 }
 
 /// Available CLI commands
@@ -143,13 +157,6 @@ pub enum Commands {
 
     /// Remove scheduled update task
     RemoveTask,
-
-    /// Update configuration from URL
-    UpdateUrl {
-        /// Force update even if file exists
-        #[arg(short, long, default_value_t = false)]
-        force: bool,
-    },
 
     /// View or modify configuration
     Config {

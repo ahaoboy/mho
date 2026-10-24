@@ -5,7 +5,7 @@ use crate::error::Result;
 use crate::utils::command::execute;
 use crate::utils::process::get_pid;
 use crate::utils::time::format_uptime;
-use crate::utils::{format_size, get_user};
+use crate::utils::{format_size, forward_slashes, get_user};
 use public_ip_address::perform_lookup;
 use std::net::IpAddr;
 use std::time::Duration;
@@ -273,14 +273,17 @@ fn build_status_lines(config: &MhoConfig, ip_str: &str) -> Vec<(&'static str, St
     lines.push(("status", status_text));
     lines.push(("proxy", config.proxy.to_string()));
     let user_prefix = if is_admin::is_admin() { "#" } else { "$" };
-    lines.push(("user", format!("{}{}", user_prefix, get_user())));
+    lines.push((
+        "user",
+        format!("{}{}", user_prefix, forward_slashes(&get_user())),
+    ));
 
     let config_dir = get_config_dir();
     lines.push((
         "config",
         format!(
             "{} (used: {} | free: {} | total: {})",
-            config_dir.to_string_lossy(),
+            forward_slashes(&config_dir.to_string_lossy()),
             format_size(config.get_size()),
             format_size(fs4::available_space(&config_dir).unwrap_or(0)),
             format_size(fs4::total_space(&config_dir).unwrap_or(0))

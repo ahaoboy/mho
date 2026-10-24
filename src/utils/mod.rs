@@ -15,14 +15,26 @@ use crate::utils::command::execute;
 
 pub fn get_user() -> String {
     if let Ok(v) = std::env::var("USER") {
-        return v;
+        return v.trim().to_string();
     }
 
     if let Ok(v) = execute("whoami", &[]) {
-        return v;
+        // `execute` returns raw stdout, and `whoami` terminates its output with
+        // a newline (`\r\n` on Windows). Leaving it in place would inject a
+        // line break into every consumer — e.g. a blank line between status
+        // rows, or a broken `crontab` path in `handle_task`.
+        return v.trim().to_string();
     }
 
     "UNKNOWN".to_string()
+}
+
+/// Replace Windows path separators with `/`.
+///
+/// Used for human-facing output (status rows) so paths and domain-style user
+/// names look the same on every platform instead of mixing `\` and `/`.
+pub fn forward_slashes(s: &str) -> String {
+    s.replace('\\', "/")
 }
 
 /// Compute the total size of a directory tree in bytes.

@@ -19,8 +19,7 @@ pub async fn handle(command: Option<Commands>) -> Result<()> {
         Some(Commands::Status) => handle_status().await,
         Some(Commands::RunTask) => handle_run_task().await,
         Some(Commands::RemoveTask) => handle_remove_task(),
-        Some(Commands::UpdateUrl { force }) => handle_update_url(force).await,
-        Some(Commands::Config { command }) => handle_config(command),
+        Some(Commands::Config { command }) => handle_config(command).await,
         Some(Commands::Upgrade { repo }) => handle_upgrade(repo).await,
         Some(Commands::Ei { args }) => handle_ei(args).await,
         Some(Commands::Completions { shell }) => handle_completions(shell),
@@ -283,7 +282,7 @@ async fn handle_run_task() -> Result<()> {
     log_info!("Executing run-task command");
 
     // Update configuration
-    handle_update_url(true).await?;
+    handle_update_config(true).await?;
 
     // Update geo databases
     // handle_update_geo(true).await?;
@@ -294,8 +293,9 @@ async fn handle_run_task() -> Result<()> {
     Ok(())
 }
 
-/// Handle update-url command
-async fn handle_update_url(force: bool) -> Result<()> {
+/// Download and apply the configuration from the configured URL. Shared by
+/// `config update` and the scheduled `run-task` command.
+async fn handle_update_config(force: bool) -> Result<()> {
     let config = MhoConfig::load()?;
     log_info!(
         "Updating {} configuration from URL (force: {})",
@@ -330,7 +330,7 @@ fn mutate_config<F: FnOnce(&mut MhoConfig) -> String>(f: F) -> Result<()> {
 }
 
 /// Handle config command and subcommands
-fn handle_config(command: Option<ConfigCommands>) -> Result<()> {
+async fn handle_config(command: Option<ConfigCommands>) -> Result<()> {
     log_info!("Executing config command");
 
     match command {
@@ -339,6 +339,7 @@ fn handle_config(command: Option<ConfigCommands>) -> Result<()> {
             let json = serde_json::to_string_pretty(&config)?;
             println!("{}", json);
         }
+        Some(ConfigCommands::Update { force }) => handle_update_config(force).await?,
         Some(ConfigCommands::Url { value }) => match value {
             Some(url) => mutate_config(|c| {
                 c.url = url;
