@@ -63,6 +63,8 @@ curl -fsSL https://gh-proxy.com/https://github.com/ahaoboy/mho-assets/blob/main/
 curl -fsSL https://cdn.statically.io/gh/ahaoboy/mho-assets/main/install.sh  | sh -s -- --proxy statically
 
 curl -fsSL https://xget.xi-xu.me/gh/ahaoboy/mho-assets/raw/refs/heads/main/install.sh  | sh -s -- --proxy xget
+
+ei ahaoboy/mho-assets --name mho-full -d user@host:port:/dir -i '/ssh-key'
 ```
 
 ### asusrouter
