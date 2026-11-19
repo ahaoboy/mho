@@ -20,7 +20,7 @@ pub async fn handle(command: Option<Commands>) -> Result<()> {
         Some(Commands::RunTask) => handle_run_task().await,
         Some(Commands::RemoveTask) => handle_remove_task(),
         Some(Commands::Config { command }) => handle_config(command).await,
-        Some(Commands::Upgrade { repo }) => handle_upgrade(repo).await,
+        Some(Commands::Upgrade { repo, target }) => handle_upgrade(repo, target).await,
         Some(Commands::Ei { args }) => handle_ei(args).await,
         Some(Commands::Completions { shell }) => handle_completions(shell),
         None => handle_status().await,
@@ -309,11 +309,11 @@ async fn handle_update_config(force: bool) -> Result<()> {
     Ok(())
 }
 
-async fn handle_upgrade(repo: UpgradeRepo) -> Result<()> {
+async fn handle_upgrade(repo: UpgradeRepo, target: Option<guess_target::Target>) -> Result<()> {
     log_info!("Executing upgrade command");
 
     let config = MhoConfig::load()?;
-    config.upgrade(repo).await?;
+    config.upgrade(repo, target).await?;
 
     Ok(())
 }

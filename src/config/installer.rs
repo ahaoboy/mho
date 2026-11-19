@@ -12,6 +12,7 @@ use crate::log_info;
 use crate::utils::download::download_text;
 use crate::utils::fs::{atomic_write, ensure_dir, file_exists};
 use crate::utils::{is_url, strip_suffix};
+use easy_install::upgrade::{self, UpgradeOptions};
 use easy_install::{InstallConfig, ei};
 use github_proxy::{Proxy, Resource};
 use std::path::Path;
@@ -183,25 +184,38 @@ impl MhoConfig {
     }
 
     /// Upgrade the `mho` (or `mho-assets`) binary in place.
-    pub async fn upgrade(&self, repo: UpgradeRepo) -> Result<()> {
-        let exe = std::env::current_exe()?;
-        let dir = exe
-            .parent()
-            .ok_or_else(|| MhoError::Download("mho dir not found".to_string()))?;
-        let url = match repo {
+    ///
+    /// Delegates to [`easy_install::upgrade`], which handles the
+    /// rename/rollback dance and — importantly — keeps the replacement's build
+    /// flavor identical to the running binary. `target` is only for deliberate
+    /// overrides; the default is the triple this binary was compiled for.
+    pub async fn upgrade(
+        &self,
+        repo: UpgradeRepo,
+        target: Option<guess_target::Target>,
+    ) -> Result<()> {
+        let repo_name = match repo {
             UpgradeRepo::Mho => "ahaoboy/mho",
             UpgradeRepo::MhoAssets => "ahaoboy/mho-assets",
         };
-        ei(
-            url,
-            &InstallConfig {
-                name: vec!["mho".to_string()],
-                upx: repo == UpgradeRepo::Mho,
-                ..self.ei_config(dir, Some("mho".to_string()))
-            },
-        )
-        .await
-        .map_err(|e| MhoError::Download(e.to_string()))?;
+
+        // Start from the regular install settings (proxy, timeout, retry,
+        // quiet, …), then replace everything upgrade-specific.
+        let mut config = self.ei_config(get_config_dir(), None);
+        config.name = vec!["mho".to_string()];
+        config.upx = repo == UpgradeRepo::Mho;
+        // The core's target says which *core binary* to download and is
+        // unrelated to this executable's platform. Never reuse it here.
+        config.target = None;
+
+        let options = UpgradeOptions {
+            target,
+            ..UpgradeOptions::new(repo_name, "mho", config)
+        };
+
+        upgrade::upgrade(options)
+            .await
+            .map_err(|e| MhoError::Download(e.to_string()))?;
 
         Ok(())
     }

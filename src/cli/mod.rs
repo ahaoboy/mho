@@ -168,6 +168,14 @@ pub enum Commands {
     Upgrade {
         #[arg(default_value_t = UpgradeRepo::MhoAssets, ignore_case = true)]
         repo: UpgradeRepo,
+
+        /// Target platform to download
+        ///
+        /// Defaults to the target this binary was compiled for, which is
+        /// always the right choice when upgrading in place. Only override it
+        /// deliberately (e.g. to repair a mis-installed copy).
+        #[arg(long)]
+        target: Option<Target>,
     },
 
     /// Usage: ei.exe [OPTIONS] [URL] [COMMAND]
