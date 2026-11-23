@@ -67,7 +67,7 @@ impl MhoConfig {
         let resource = self.core.repo(&self.target)?;
         let url = self
             .proxy
-            .url(resource)
+            .url(&resource)
             .ok_or_else(|| MhoError::Download("Failed to get core download URL".to_string()))?;
 
         log_info!("Downloading core from: {}", url);
@@ -99,7 +99,7 @@ impl MhoConfig {
     pub fn ei_config<T: AsRef<Path>>(&self, dir: T, alias: Option<String>) -> InstallConfig {
         easy_install::InstallConfig {
             dir: Some(dir.as_ref().to_string_lossy().to_string()),
-            no_path: true,
+            skip_path: true,
             proxy: self.proxy,
             alias,
             target: Some(self.target),
