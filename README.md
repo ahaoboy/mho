@@ -281,15 +281,12 @@ After installing scheduled tasks, the system will automatically:
 
 ## Logging
 
-Log files are written next to the `mho` executable, in:
-
-- `<mho_dir>/mho_config/logs/mho.log` (current)
-- `<mho_dir>/mho_config/logs/mho.log.1` … `mho.log.5` (rotated backups)
-
-When `mho.log` reaches 1 MB it is rotated: `mho.log` → `mho.log.1` →
-… → `mho.log.5` (the oldest is dropped). At most 6 files (~6 MB) are
-kept, so log storage is bounded — important on flash-constrained devices
-like routers. Timestamps are RFC 3339 UTC.
+Logs are written to a single file next to the `mho` executable:
+`<mho_dir>/mho_config/logs/mho.log`. The file is limited to 1 MB. When it
+fills, the oldest entries are dropped and the newest kept (rolling cleanup),
+so recent history remains available while disk usage stays bounded to one
+file. A single log entry longer than the limit is truncated. Timestamps are
+RFC 3339 UTC.
 
 ## Development
 
